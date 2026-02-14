@@ -212,20 +212,44 @@ setup_autostart() {
     fi
 }
 
+setup_accessibility_macos() {
+    echo ""
+    warn "Accessibility permission is required for keyboard/mouse control."
+    echo ""
+    info "Opening System Settings..."
+    info "  1. Click  +  button"
+    info "  2. Press  Cmd+Shift+G"
+    info "  3. Type:  /usr/local/bin"
+    info "  4. Select  deadkbd-server  and click Open"
+    echo ""
+    open "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility" 2>/dev/null || true
+    printf "Press Enter when done... " > /dev/tty
+    read -r _ </dev/tty
+}
+
+setup_uinput_linux() {
+    echo ""
+    info "Setting up /dev/uinput access..."
+    if [ ! -w /dev/uinput ]; then
+        sudo chmod 0660 /dev/uinput
+        sudo chown root:"$USER" /dev/uinput
+        ok "/dev/uinput permissions set"
+    else
+        ok "/dev/uinput already accessible"
+    fi
+
+    # Persist across reboots via udev rule
+    local udev_rule="/etc/udev/rules.d/99-deadkbd.rules"
+    if [ ! -f "$udev_rule" ]; then
+        echo "KERNEL==\"uinput\", MODE=\"0660\", GROUP=\"$USER\"" | sudo tee "$udev_rule" > /dev/null
+        ok "udev rule created for persistence"
+    fi
+}
+
 post_install_notes() {
     echo ""
     echo -e "${GREEN}=== Installation complete ===${NC}"
     echo ""
-    if [ "$OS" = "linux" ]; then
-        info "Make sure /dev/uinput is accessible:"
-        echo "  sudo chmod 0660 /dev/uinput"
-        echo "  sudo chown root:\$USER /dev/uinput"
-        echo ""
-    elif [ "$OS" = "macos" ]; then
-        info "Grant Accessibility permissions:"
-        echo "  System Settings > Privacy & Security > Accessibility"
-        echo ""
-    fi
     info "Default port: 9877"
 }
 
@@ -238,5 +262,12 @@ detect_platform
 setup_password
 get_download_url
 download_binary
+
+if [ "$OS" = "macos" ]; then
+    setup_accessibility_macos
+elif [ "$OS" = "linux" ]; then
+    setup_uinput_linux
+fi
+
 setup_autostart
 post_install_notes
