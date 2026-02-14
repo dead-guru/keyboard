@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0). Leave empty for build-only.'
+        required: false
 
 jobs:
   build-linux:
@@ -80,7 +84,7 @@ jobs:
           path: server/deadkbd-server-macos
 
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') || inputs.tag != ''
     needs: [build-linux, build-macos]
     runs-on: ubuntu-latest
     permissions:
@@ -94,5 +98,6 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: artifacts/*
           generate_release_notes: true
