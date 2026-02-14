@@ -87,7 +87,8 @@ setup_password() {
 
     if [ -f "$config_file" ]; then
         warn "Config already exists at ${config_file}"
-        read -rp "Overwrite password? [y/N]: " overwrite < /dev/tty
+        printf "Overwrite password? [y/N]: " > /dev/tty
+        read -r overwrite < /dev/tty
         if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
             info "Keeping existing password"
             return
@@ -96,10 +97,12 @@ setup_password() {
 
     echo ""
     while true; do
-        read -rsp "Enter password for dead-kbd server: " password < /dev/tty
-        echo ""
-        read -rsp "Confirm password: " password2 < /dev/tty
-        echo ""
+        printf "Enter password for dead-kbd server: " > /dev/tty
+        read -rs password < /dev/tty
+        echo "" > /dev/tty
+        printf "Confirm password: " > /dev/tty
+        read -rs password2 < /dev/tty
+        echo "" > /dev/tty
 
         if [ "$password" = "$password2" ]; then
             break
@@ -187,7 +190,8 @@ EOF
 
 setup_autostart() {
     echo ""
-    read -rp "Add to autostart? [Y/n]: " autostart < /dev/tty
+    printf "Add to autostart? [Y/n]: " > /dev/tty
+    read -r autostart < /dev/tty
     if [[ "$autostart" =~ ^[Nn]$ ]]; then
         info "Skipping autostart. Run manually:"
         info "  source ${CONFIG_DIR}/config && ${BINARY_NAME} --password \$PASSWORD"
