@@ -235,8 +235,8 @@ echo -e "${CYAN}  dead-kbd server installer${NC}"
 echo ""
 
 detect_platform
+setup_password
 get_download_url
 download_binary
-setup_password
 setup_autostart
 post_install_notes
